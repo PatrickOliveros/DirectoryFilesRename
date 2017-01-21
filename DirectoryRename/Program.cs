@@ -7,29 +7,50 @@ namespace DirectoryFilesRename
     class Program
     {
         // Todo: Provide path of the lookup directory 
-        static string filePath = @"F:\Training Materials\_Books\";
+        static string filePath = @"F:\Training Materials\_Booksx\";
 
-        // Todo: This program renames a list of folders that satisfies a particular string 
+        // Todo: This program renames a list of folder/s and/or file/s by removing the matched string
+        // from the list in the scoped directory 
+
         static void Main(string[] args)
         {
+            Console.Title = "Directory/File Renaming";
             DirectoryInfo di = new DirectoryInfo(filePath);
-            ArrayList alExceptions = null;
 
+            if (!di.Exists)
+            {
+                Console.WriteLine($"Directory \"{filePath}\" does not exist. Press any key to exit.");
+                Console.ReadKey();
+                return;
+            }
+
+            ArrayList alExceptions = null;
+            
 
             // Todo : Show Summary of total files matched, and those failed
-            var affectedObjects = 0;
+            //var affectedObjects = 0;
 
             // Todo: Provide the string that will be checked in the path
-
-
-            ArrayList al = new ArrayList 
+            ArrayList al = new ArrayList
             {
                 "pattern1", "pattern2", "pattern3"
             };
 
+            if (al.Count < 1)
+            {
+                Console.WriteLine("Nothing to process. Press any key to exit.");
+                Console.ReadKey();
+                return;
+            }
+
+            // Todo: Change value according to preferred change
+            var strReplace = "";
 
             foreach (string strSrc in al)
             {
+                // Re-initialize affectedObjects for every time a new pattern is checked
+                var affectedObjects = 0;
+
                 // start checking for directories
                 foreach (var objDirectory in di.GetDirectories())
                 {
@@ -38,8 +59,8 @@ namespace DirectoryFilesRename
                         if (ObjectContains(objDirectory.Name, strSrc))
                         {
                             affectedObjects += 1;
-                            var newName = objDirectory.Name.Replace(strSrc, "");
-                            Directory.Move(SetPath(objDirectory.Name), SetPath(newName));
+                            Directory.Move(SetPath(objDirectory.Name), 
+                                SetPath(ReplaceName(objDirectory.Name, strSrc, strReplace)));
                         }
                     }
                     catch (Exception ex)
@@ -57,6 +78,9 @@ namespace DirectoryFilesRename
 
                 ShowResults(affectedObjects, alExceptions, strSrc);
 
+                // reset counter to 0 to reflect changes in files for each pattern to check
+                affectedObjects = 0;
+
                 // start checking for files
                 foreach (var objFile in di.GetFiles())
                 {
@@ -65,8 +89,8 @@ namespace DirectoryFilesRename
                         if (ObjectContains(objFile.Name, strSrc))
                         {
                             affectedObjects += 1;
-                            var newName = objFile.Name.Replace(strSrc, "");
-                            File.Move(SetPath(objFile.Name), SetPath(newName));
+                            File.Move(SetPath(objFile.Name), 
+                                SetPath(ReplaceName(objFile.Name, strSrc, strReplace)));
                         }
                     }
                     catch (Exception ex)
@@ -85,6 +109,11 @@ namespace DirectoryFilesRename
             } // end files
 
             Console.Read();
+        }
+
+        private static string ReplaceName(string strName, string strPattern, string strReplacement)
+        {
+            return strName.Replace(strPattern, strReplacement);
         }
 
         private static bool ObjectContains(string strSource, string strToCheck)
